@@ -91,7 +91,7 @@ public class SocketServer {
     private AuthTokenResult denied() { return new AuthTokenResult(false,Map.of("message","UNAUTHORIZED")); }
     private boolean authorized(SocketIOClient client) {
         TokenVerifier.Identity identity = client.get("identity");
-        return identity != null && identity.expiresAt() > System.currentTimeMillis();
+        return identity != null && tokens.active(identity);
     }
     public boolean ready() { return started; }
     void stop(@Observes ShutdownEvent event) { close(); }
