@@ -1,0 +1,32 @@
+services:
+  backend-api:
+    image: ${API_IMAGE:?Definir imagen API con etiqueta inmutable}
+    restart: unless-stopped
+    environment: &production-env
+      QUARKUS_PROFILE: prod
+      HTTP_PORT: "8080"
+      GOOGLE_CLOUD_PROJECT: ${FIREBASE_PROJECT_ID:?Definir proyecto Firebase}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase.json
+      APP_ALLOWED_ORIGINS: ${FRONTEND_ORIGIN:?Definir origen Angular HTTPS}
+    volumes:
+      - type: bind
+        source: ${API_FIREBASE_CREDENTIALS_FILE:?Ruta absoluta a credenciales API}
+        target: /run/secrets/firebase.json
+        read_only: true
+    networks: [proxy]
+  backend-realtime:
+    image: ${REALTIME_IMAGE:?Definir imagen realtime con etiqueta inmutable}
+    restart: unless-stopped
+    environment:
+      <<: *production-env
+      APP_SOCKET_PORT: "9092"
+    volumes:
+      - type: bind
+        source: ${REALTIME_FIREBASE_CREDENTIALS_FILE:?Ruta absoluta a credenciales realtime}
+        target: /run/secrets/firebase.json
+        read_only: true
+    networks: [proxy]
+networks:
+  proxy:
+    external: true
+    name: ${DOKPLOY_NETWORK:?Definir red externa del proxy}
