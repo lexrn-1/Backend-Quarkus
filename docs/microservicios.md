@@ -7,7 +7,7 @@ Ambos hijos heredan únicamente versiones/build del padre. Cada uno declara sus 
 | `HTTP_PORT` | API 8080; realtime 8081; imágenes 8080 |
 | `GOOGLE_CLOUD_PROJECT` | demo-app-meet; configurar proyecto real en producción |
 | `GOOGLE_APPLICATION_CREDENTIALS` | Archivo externo de cuenta de servicio, producción |
-| `APP_ALLOWED_ORIGINS` | http://localhost:4200; lista separada por comas |
+| `APP_ALLOWED_ORIGINS` | https://frontln.vercel.app, http://localhost:4200 y http://127.0.0.1:4200; lista separada por comas |
 | `APP_DEMO_DOCUMENT` | demo/sprint0, documento con campo string message |
 | `APP_SOCKET_PORT` | 9092 |
 | `APP_ALLOWED_EMAIL_DOMAINS` | Vacía; restricción institucional pendiente; lista separada por comas |

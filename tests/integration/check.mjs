@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
 import { runIdentityChecks, runRecoveryChecks, runAccountSecurityChecks, runEmailPolicyChecks } from './identity.mjs';
@@ -12,6 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const children = [], sockets = [];
 const project = 'demo-app-meet';
 const origin = 'http://localhost:4200';
+const allowedOrigins = ['https://frontln.vercel.app',origin,'http://127.0.0.1:4200'];
 const apiPort = 18080, rtPort = 18081, socketPort = 19092;
 const firestore = `http://${process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8085'}`;
 const auth = `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099'}`;
@@ -21,12 +22,21 @@ const env = { ...process.env, GOOGLE_CLOUD_PROJECT: project, QUARKUS_PROFILE: 'l
 
 function launch(module, port, overrides = {}) {
   const log = createWriteStream(new URL(`../../${module}/target/integration-${port}.log`, import.meta.url));
-  const child = spawn('java', ['-jar', `${module}/target/quarkus-app/quarkus-run.jar`], {
+  const child = spawn('java', ['-Xms32m', '-Xmx256m', '-XX:ActiveProcessorCount=2', '-jar', `${module}/target/quarkus-app/quarkus-run.jar`], {
     cwd: root, env: { ...env, HTTP_PORT: String(port), ...overrides }, stdio: ['ignore', 'pipe', 'pipe']
   });
   child.stdout.pipe(log); child.stderr.pipe(log);
+  // Capture exit at launch time: it may happen before cleanup begins.
+  child.finished = new Promise(resolve => child.once('close', (code, signal) => resolve([code, signal])));
   children.push(child);
   return child;
+}
+async function stop(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return child.finished;
+  const forced = setTimeout(() => child.kill('SIGKILL'), 15000);
+  child.kill('SIGTERM');
+  try { return await child.finished; }
+  finally { clearTimeout(forced); }
 }
 async function waitFor(url, status = 200) {
   for (let n = 0; n < 120; n++) {
@@ -74,6 +84,15 @@ try {
       assert.equal((await fetch(`http://127.0.0.1:${port}${path}`)).status,200);
   }
   await fetch(`${firestore}/v1/projects/${project}/databases/(default)/documents/demo/sprint0`,{method:'DELETE',headers:{Authorization:'Bearer owner'}});
+  for (const port of [apiPort,rtPort]) {
+    for (const allowed of allowedOrigins) {
+      const response=await fetch(`http://127.0.0.1:${port}/q/openapi`,{headers:{Origin:allowed}});
+      assert.equal(response.headers.get('access-control-allow-origin'),allowed);
+    }
+    const blocked=await fetch(`http://127.0.0.1:${port}/q/openapi`,{headers:{Origin:'https://evil.invalid'}});
+    assert.notEqual(blocked.headers.get('access-control-allow-origin'),'https://evil.invalid');
+  }
+  console.log('PASS CORS: Vercel, localhost y loopback permitidos en ambos servicios; origen ajeno bloqueado');
   const url=`http://127.0.0.1:${apiPort}/api/v1/demo`;
   assert.equal((await fetch(url)).status,404);
   await seed('Sprint 0'); assert.deepEqual(await (await fetch(url)).json(),{message:'Sprint 0'});
@@ -102,6 +121,11 @@ try {
   await rejected(connection({token:'invalid',proofSession:'session-a'}), 'token inválido');
   await rejected(connection({token:goodToken,proofSession:'not-allowed'}), 'sesión inválida');
   await rejected(connection({token:goodToken,proofSession:'session-a'},'websocket','https://evil.invalid'), 'origen inválido');
+  for (const allowed of allowedOrigins) {
+    const client=await connected(connection({token:goodToken,proofSession:'session-a'},'websocket',allowed));
+    assert.equal((await ack(client,'proof:ping')).ok,true); client.close();
+  }
+  console.log('PASS Socket.IO CORS: Vercel, localhost y loopback conectan con token válido');
   for (const transport of ['polling','websocket']) {
     const s=await connected(connection({token:goodToken,proofSession:'session-a'},transport));
     assert.equal((await ack(s,'proof:ping')).ok,true); s.close();
@@ -136,22 +160,22 @@ try {
   launch('backend-api',18085,{APP_ALLOWED_EMAIL_DOMAINS:'university.edu.co'});
   await waitFor('http://127.0.0.1:18085/q/health/ready');
   await runEmailPolicyChecks({api:'http://127.0.0.1:18085/api/v1',auth});
+  // Release integration services before testing isolated invalid production startup.
+  for (const child of children) {
+    await stop(child);
+    assert.notEqual(child.signalCode,'SIGKILL','Los servicios deben cerrar limpiamente');
+  }
   for (const [module,port] of [['backend-api',18083],['backend-realtime',18084]]) {
     const child=launch(module,port,{QUARKUS_PROFILE:'prod'});
-    const exited=once(child,'exit');
-    const force=setTimeout(()=>child.kill('SIGKILL'),15000);
-    const [code,signal]=await exited; clearTimeout(force);
+    const force=setTimeout(()=>child.kill('SIGKILL'),30000);
+    const [code,signal]=await child.finished; clearTimeout(force);
     assert.equal(signal,null); assert.notEqual(code,0);
+    assert.match(readFileSync(`${root}${module}/target/integration-${port}.log`,'utf8'),/Emuladores no permitidos/);
   }
   console.log('PASS producción: ambos servicios rechazan variables de emuladores al iniciar');
 } finally {
   for (const s of sockets) s.close();
-  for (const child of children) child.kill('SIGTERM');
-  await Promise.all(children.map(async child=>{
-    if(child.exitCode !== null) return;
-    const forced=setTimeout(()=>child.kill('SIGKILL'),12000);
-    await once(child,'exit'); clearTimeout(forced);
-  }));
+  await Promise.all(children.map(stop));
 }
 await new Promise((resolve,reject)=>{
   const socket=createConnection({host:'127.0.0.1',port:socketPort});

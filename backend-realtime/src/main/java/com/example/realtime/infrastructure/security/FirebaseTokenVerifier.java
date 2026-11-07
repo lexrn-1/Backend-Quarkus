@@ -21,7 +21,7 @@ public class FirebaseTokenVerifier implements TokenVerifier {
                 throw new SecurityException("Proveedor no permitido");
             long expiration = ((Number) verified.getClaims().get("exp")).longValue() * 1000L;
             String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8)));
-            var identity = new Identity(verified.getUid(),expiration,hash);
+            var identity = new Identity(verified.getUid(),expiration,hash,((Number)verified.getClaims().get("auth_time")).longValue()*1000L);
             if (!active(identity)) throw new SecurityException("Perfil incompleto o sesión inválida");
             return identity;
         } catch (Exception e) { throw new SecurityException("Sesión inválida o perfil incompleto"); }
@@ -32,7 +32,9 @@ public class FirebaseTokenVerifier implements TokenVerifier {
             var store = firebase.firestore();
             var profile = store.collection("users").document(identity.uid()).get().get(3, TimeUnit.SECONDS);
             var revoked = store.collection("revokedTokens").document(identity.tokenHash()).get().get(3, TimeUnit.SECONDS);
-            return profile.exists() && "COMPLETE".equals(profile.getString("status")) && !revoked.exists();
+            if (!profile.exists() || !"COMPLETE".equals(profile.getString("status")) || revoked.exists()) return false;
+            var user = firebase.auth().getUser(identity.uid());
+            return !user.isDisabled() && user.getTokensValidAfterTimestamp() <= identity.authenticatedAt();
         } catch (Exception e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             return false;

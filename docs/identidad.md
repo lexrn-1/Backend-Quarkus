@@ -90,6 +90,6 @@ finally { await signOut(auth); }
 
 Activar Email/Password y Google en Firebase Console, registrar dominios autorizados y decidir la política de contraseña. La cuenta administrativa backend no reemplaza esos ajustes. No se modificó la configuración remota ni se crearon usuarios reales en esta entrega; las pruebas son con emuladores.
 
-`revokedTokens/{sha256}` solo guarda expiresAt, sin token original. API y realtime consultan su existencia antes de permitir acceso. Configurar TTL Firestore sobre expiresAt para limpieza automática si se desea; no se ha desplegado esa política y no es requisito para rechazar tokens. El borrado de cuentas/perfiles y la edición pertenecen a Sprint 2.
+`revokedTokens/{sha256}` solo guarda expiresAt, sin token original. API y realtime consultan su existencia antes de permitir acceso. Realtime comprueba también cuenta habilitada y revocación Firebase antes de cada evento técnico. Configurar TTL Firestore sobre expiresAt para limpieza automática si se desea; no se ha desplegado esa política y no es requisito para rechazar tokens. El borrado de cuentas/perfiles y la edición pertenecen a Sprint 2.
 
 Referencias: [verificar tokens](https://firebase.google.com/docs/auth/admin/verify-id-tokens), [sesiones Firebase](https://firebase.google.com/docs/auth/admin/manage-sessions), [transacciones](https://firebase.google.com/docs/firestore/manage-data/transactions), [emulador Auth](https://firebase.google.com/docs/emulator-suite/connect_auth).

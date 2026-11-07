@@ -7,7 +7,7 @@ services:
       HTTP_PORT: "8080"
       GOOGLE_CLOUD_PROJECT: ${FIREBASE_PROJECT_ID:?Definir proyecto Firebase}
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase.json
-      APP_ALLOWED_ORIGINS: ${FRONTEND_ORIGIN:?Definir origen Angular HTTPS}
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-${FRONTEND_ORIGIN:-https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}}
       APP_ALLOWED_EMAIL_DOMAINS: ${APP_ALLOWED_EMAIL_DOMAINS:-}
     volumes:
       - type: bind

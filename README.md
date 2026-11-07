@@ -17,7 +17,7 @@ La prueba técnica de señalización está habilitada únicamente en el perfil l
 4. Un perfil completo puede acceder a `GET /api/v1/me` y a Socket.IO. Un perfil pendiente recibe 403 en rutas privadas.
 5. Para salir: `POST /api/v1/session/logout` y `signOut()` del SDK Firebase en el cliente.
 
-[Guía de identidad con ejemplos](docs/identidad.md) y [contratos HTTP](docs/contratos.md). Swagger permite pegar un ID token mediante **Authorize**. El backend no recibe contraseñas ni emite tokens paralelos.
+[Contratos para el frontend](docs/integracion-cliente.md), [guía de identidad con ejemplos](docs/identidad.md) y [contratos HTTP](docs/contratos.md). Swagger permite pegar un ID token mediante **Authorize**. El backend no recibe contraseñas ni emite tokens paralelos.
 
 La lista de dominios institucionales quedó pendiente por decisión del usuario. `APP_ALLOWED_EMAIL_DOMAINS` permite configurarla; vacía admite cualquier correo válido de Firebase. Activar Email/Password y Google en Firebase Console y definir allí la política de contraseñas antes de integración pública.
 
@@ -39,7 +39,7 @@ npm ci
 npm run verify
 ```
 
-El comando inicia emuladores Auth/Firestore, ejecuta los JAR construidos y cierra todos los procesos. Usa los puertos 9099, 8085, 18080–18082 y 19092; los emuladores usan también 4400, 4500 y 9150. Crea datos efímeros en el proyecto `demo-app-meet`. No apuntar esta prueba a recursos reales.
+El comando inicia emuladores Auth/Firestore, ejecuta los JAR construidos y cierra todos los procesos. Usa los puertos 9099, 8085, 18080–18085 y 19092; los emuladores usan también 4400, 4500 y 9150. Crea datos efímeros en el proyecto `demo-app-meet`. No apuntar esta prueba a recursos reales.
 
 ## Desarrollo manual
 

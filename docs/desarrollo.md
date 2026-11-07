@@ -13,4 +13,4 @@ Al añadir funcionalidad:
 
 Eliminar `.gitkeep` cuando una carpeta ya tenga archivos reales. La duplicación de configuración Firebase entre servicios mantiene independencia; no compartir dominio ni añadir dependencia entre módulos para evitarla.
 
-Trabajar por rama y PR cuando se conecte el repositorio. Esta carpeta todavía no tiene repositorio Git; no se ha creado rama, commit ni PR. No inventar evidencias de revisión o despliegue.
+Trabajar por rama y PR cuando se conecte el repositorio. El trabajo actual se entrega en develop; master se conserva. No se ha creado un PR ni se declara revisión o despliegue remoto.

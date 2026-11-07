@@ -3,7 +3,7 @@
 No se ha accedido a un VPS ni publicado imágenes. Los nombres siguientes son ilustrativos.
 
 1. Ejecutar CI y habilitar GHCR en el repositorio. El workflow construye imágenes después de verificar Maven e integración; solo publica al ejecutar manualmente `publish=true` desde main con permisos de paquetes. Usar etiqueta SHA inmutable y conservar la anterior.
-2. Crear recurso Compose en Dokploy usando `compose.dokploy.yaml`. Configurar `API_IMAGE`, `REALTIME_IMAGE`, `FIREBASE_PROJECT_ID`, `FRONTEND_ORIGIN` HTTPS y `DOKPLOY_NETWORK` con valores reales.
+2. Crear recurso Compose en Dokploy usando `compose.dokploy.yaml`. Configurar `API_IMAGE`, `REALTIME_IMAGE`, `FIREBASE_PROJECT_ID`, `APP_ALLOWED_ORIGINS` (lista de orígenes autorizados; `FRONTEND_ORIGIN` es alternativa compatible) y `DOKPLOY_NETWORK` con valores reales.
 3. Crear archivos administrativos externos al repo y configurar `API_FIREBASE_CREDENTIALS_FILE` y `REALTIME_FIREBASE_CREDENTIALS_FILE` como rutas absolutas del VPS. Montajes de solo lectura; permitir lectura a UID 10001. No incluir secretos en variables del frontend, imágenes ni capturas.
 4. Configurar dominios Dokploy: `api.ejemplo.com` → backend-api:8080; `rt.ejemplo.com` → backend-realtime:9092; `rt-api.ejemplo.com` → backend-realtime:8080. Adjuntar la red externa del proxy. Compose no publica puertos al host.
 5. Activar certificados HTTPS. Probar polling y Upgrade WebSocket en `/socket.io/`, con Origin Angular autorizado e ID token Firebase real. El modo técnico `proof:*` queda desactivado en producción.

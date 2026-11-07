@@ -6,7 +6,7 @@ quarkus:
     port: ${HTTP_PORT:8080}
     cors:
       enabled: true
-      origins: ${APP_ALLOWED_ORIGINS:http://localhost:4200}
+      origins: ${APP_ALLOWED_ORIGINS:https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}
       methods: GET,POST,OPTIONS
       headers: Authorization,Content-Type
     auth:

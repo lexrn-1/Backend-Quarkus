@@ -10,7 +10,7 @@ services:
       GOOGLE_CLOUD_PROJECT: demo-app-meet
       FIRESTORE_EMULATOR_HOST: firebase-emulators:8085
       FIREBASE_AUTH_EMULATOR_HOST: firebase-emulators:9099
-      APP_ALLOWED_ORIGINS: ${FRONTEND_ORIGIN:-http://localhost:4200}
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-${FRONTEND_ORIGIN:-https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}}
       APP_ALLOWED_EMAIL_DOMAINS: ${APP_ALLOWED_EMAIL_DOMAINS:-}
     ports:
       - "127.0.0.1:8080:8080"

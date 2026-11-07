@@ -14,6 +14,8 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement
 
 @Path("/api/v1") @Produces(MediaType.APPLICATION_JSON) @Blocking
 @SecurityRequirement(name="FirebaseBearer")
+@org.eclipse.microprofile.openapi.annotations.security.SecurityScheme(securitySchemeName="FirebaseBearer",
+    type=org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType.HTTP,scheme="bearer",bearerFormat="Firebase ID token")
 public class IdentityController {
     @Inject CurrentFirebaseSession current;
     @Inject ReadSession readSession;
@@ -37,5 +39,6 @@ public class IdentityController {
     @GET @Path("/me") @Operation(summary="Perfil propio; requiere perfil completo")
     public ProfileResponse me() { return ProfileResponse.from(myProfile.execute(current.get())); }
     @POST @Path("/session/logout") @Operation(summary="Invalida el ID token actual; el cliente también debe ejecutar Firebase signOut")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode="204",description="ID token actual invalidado")
     public Response logout() { logout.execute(current.get()); return Response.noContent().header("Cache-Control","no-store").build(); }
 }

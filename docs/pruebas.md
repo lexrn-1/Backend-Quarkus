@@ -28,3 +28,7 @@ No registrar tokens ni cuerpos de auth. El logger de errores crudos InPacketHand
 La misma suite incluye alta/login Email/Password con Firebase Auth emulado, Google emulado inicial/recurrente, perfil pendiente/privado, username concurrente con un ganador, idempotencia, validaciones y rechazo de uid/email impuestos, expiración y logout. También prueba reintentar la finalización después de fallo Firestore sin crear otra cuenta Auth. Las unitarias cubren reglas y casos de uso; el emulador verifica transacciones reales.
 
 Pendientes de frontend: ventanas Google/cancelación, mensajes junto a campos, conservación del formulario, retorno a ruta solicitada, navegación atrás y accesibilidad. Pendientes de producción: firma real y configuración proveedores/dominios/política de contraseña, QA publicado y PR. La lista institucional se dejó pendiente por decisión del usuario.
+
+Las verificaciones de Sprint 1 incluyen además cuentas Firebase deshabilitadas/eliminadas, revocación administrativa, preflight CORS, esquema Bearer en OpenAPI y dominios institucionales configurados en un proceso separado.
+
+El lanzador de integración limita cada backend a 256 MiB y dos CPU visibles, captura el cierre de procesos desde su creación y libera los servicios antes de las pruebas negativas de arranque. Estos límites son exclusivos de pruebas, no dimensionamiento de producción.

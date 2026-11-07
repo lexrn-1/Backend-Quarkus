@@ -1,0 +1,38 @@
+Sprint 1 — Evidencia local backend
+Fecha: 2026-11-07; America/Bogota
+Rama de entrega: develop; master conservada.
+
+./mvnw -B -ntp clean verify: BUILD SUCCESS
+17 comprobaciones Maven, 0 fallos: 15 backend-api (reglas/casos de uso/arquitectura), 2 backend-realtime (arquitectura).
+npm ci: completado.
+npm --prefix tests/integration run verify: código de salida 0.
+Firebase Auth y Firestore emulados; proyecto demo-app-meet; sin crear usuarios ni escribir datos en Firebase real.
+
+PASS demo: 404, lectura real del emulador, actualización sin caché, CORS, health y Swagger
+PASS US-01/03: registro/login Firebase, errores, uid confiable, perfil pendiente/privado, validación e idempotencia
+PASS US-01: username normalizado único bajo concurrencia real y reintento del perdedor
+PASS US-02: Google inicial pendiente, colisión de username y Google recurrente con perfil completo
+PASS US-03: expiración y logout de perfiles pendientes/completos; token actual invalidado sin afectar otro usuario
+PASS seguridad: cuenta Firebase deshabilitada, eliminada y tokens revocados rechazados
+PASS reglas Firestore: acceso directo del cliente denegado
+PASS Socket.IO: auth, rechazo sin token/inválido/origen, polling, websocket, ack, aislamiento y reconexión
+PASS realtime: logout invalida eventos de una conexión que ya estaba abierta
+PASS dependencia caída: demo 503, readiness DOWN y liveness UP
+PASS recuperación: Auth creado sin Firestore, bootstrap y finalización reintentables sin duplicar cuenta
+PASS política configurable: dominio fuera de lista bloqueado antes de completar perfil
+PASS producción: ambos servicios rechazan variables de emuladores al iniciar
+PASS procesos cerrados; prueba local finalizada (sin Firebase real, TLS ni WebRTC)
+
+Adicionales: preflight CORS con Authorization, esquema FirebaseBearer OpenAPI y manifiestos XML/JSON válidos.
+Compose local y Dokploy: sintaxis validada; no se ejecutaron contenedores por permisos del daemon Docker.
+Pendientes: definir dominios institucionales, configuración de proveedores/contraseña y tokens reales, Angular y QA público.
+No hay evidencia de despliegue ni de una ejecución remota de GitHub Actions.
+
+CORS actualizado y verificado (2026-11-07):
+Orígenes: https://frontln.vercel.app, http://localhost:4200, http://127.0.0.1:4200.
+./mvnw -B -ntp verify: BUILD SUCCESS; 17 comprobaciones aprobadas.
+Suite de integración con emuladores: salida 0.
+PASS CORS: Vercel, localhost y loopback permitidos en ambos servicios; origen ajeno bloqueado
+PASS Socket.IO CORS: Vercel, localhost y loopback conectan con token válido
+Compose local y Dokploy: sintaxis validada con valores ilustrativos.
+Guía de cliente: docs/integracion-cliente.md.
