@@ -4,6 +4,7 @@ import jakarta.ws.rs.ext.Provider;
 @Provider
 public class IdentityHeaders implements ContainerResponseFilter {
     public void filter(ContainerRequestContext request, ContainerResponseContext response) {
-        if (request.getUriInfo().getPath().startsWith("api/v1/")) response.getHeaders().putSingle("Cache-Control","no-store");
+        String path = request.getUriInfo().getPath();
+        if (path.startsWith("api/v1/") || path.startsWith("/api/v1/")) response.getHeaders().putSingle("Cache-Control","no-store");
     }
 }

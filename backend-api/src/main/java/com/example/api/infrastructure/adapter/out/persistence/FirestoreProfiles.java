@@ -20,21 +20,6 @@ public class FirestoreProfiles implements ProfileRepository {
         var doc = await(firebase.firestore().collection("users").document(uid).get());
         return doc.exists() ? Optional.of(profile(doc)) : Optional.empty();
     }
-    public UserProfile ensurePending(AuthenticatedUser user) {
-        await(firebase.firestore().runTransaction(tx -> {
-            var ref = firebase.firestore().collection("users").document(user.uid());
-            var existing = tx.get(ref).get();
-            if (!existing.exists()) {
-                var data = new HashMap<String,Object>();
-                data.put("uid", user.uid()); data.put("email", user.email());
-                data.put("status", "PENDING"); data.put("createdAt", FieldValue.serverTimestamp());
-                data.put("updatedAt", FieldValue.serverTimestamp());
-                tx.create(ref, data);
-            }
-            return true;
-        }));
-        return find(user.uid()).orElseThrow(DependencyUnavailableException::new);
-    }
     public UserProfile complete(AuthenticatedUser user, ProfileDraft draft) {
         await(firebase.firestore().runTransaction(tx -> {
             var store = firebase.firestore();

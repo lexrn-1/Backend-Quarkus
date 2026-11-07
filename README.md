@@ -1,13 +1,25 @@
-# app_meet — Sprint 0 backend
+# app_meet — Backend de sprints 0 y 1
 
 Dos microservicios Java 21 / Quarkus 3.40.1, con arquitectura hexagonal y Maven Wrapper 3.9.16:
 
 | Servicio | Paquete | HTTP local | Responsabilidad implementada |
 |---|---|---|---|
-| backend-api | com.example.api | 8080 | Lectura pública de demostración de Firestore |
-| backend-realtime | com.example.realtime | 8081 | Listener Socket.IO 9092 autenticado con Firebase |
+| backend-api | com.example.api | 8080 | Sesiones Firebase, perfiles, username único y demo Firestore |
+| backend-realtime | com.example.realtime | 8081 | Socket.IO 9092 con sesión válida y perfil completo |
 
-La prueba técnica de señalización está habilitada únicamente en el perfil local con emuladores. No hay CRUD de perfiles/salas, chat, Angular ni WebRTC funcional. La publicación y el cierre end-to-end del sprint siguen pendientes.
+La prueba técnica de señalización está habilitada únicamente en el perfil local con emuladores. El sprint 1 incluye el soporte backend para US-01/02/03. El registro, Google y login se realizan con Firebase Auth; la API valida sus ID tokens, completa perfiles, reserva usernames y protege el acceso. No hay edición/borrado de perfiles, salas, chat, Angular ni WebRTC funcional. La publicación y el cierre end-to-end siguen pendientes.
+
+## Autenticación y acceso (Sprint 1)
+
+1. Registrar o iniciar sesión en Firebase Auth mediante Email/Password o Google.
+2. Enviar su ID token como `Authorization: Bearer <token>` a `GET /api/v1/session`.
+3. Si devuelve `COMPLETE_PROFILE`, enviar nombres, apellidos, username y avatar a `POST /api/v1/me/complete`.
+4. Un perfil completo puede acceder a `GET /api/v1/me` y a Socket.IO. Un perfil pendiente recibe 403 en rutas privadas.
+5. Para salir: `POST /api/v1/session/logout` y `signOut()` del SDK Firebase en el cliente.
+
+[Guía de identidad con ejemplos](docs/identidad.md) y [contratos HTTP](docs/contratos.md). Swagger permite pegar un ID token mediante **Authorize**. El backend no recibe contraseñas ni emite tokens paralelos.
+
+La lista de dominios institucionales quedó pendiente por decisión del usuario. `APP_ALLOWED_EMAIL_DOMAINS` permite configurarla; vacía admite cualquier correo válido de Firebase. Activar Email/Password y Google en Firebase Console y definir allí la política de contraseñas antes de integración pública.
 
 ## Requisitos y compilación
 
@@ -81,4 +93,4 @@ Producción usa [compose.dokploy.yaml](compose.dokploy.yaml), sin publicar puert
 
 ## Documentación
 
-[Índice](docs/README.md), [arquitectura](docs/arquitectura.md), [Firebase](docs/firebase.md), [contratos](docs/contratos.md), [pruebas](docs/pruebas.md) y [estado del sprint](docs/sprint-0.md).
+[Índice](docs/README.md), [arquitectura](docs/arquitectura.md), [Firebase](docs/firebase.md), [contratos](docs/contratos.md), [pruebas](docs/pruebas.md) y [estado del sprint 0](docs/sprint-0.md) y [estado del sprint 1](docs/sprint-1.md).

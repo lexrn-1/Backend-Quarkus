@@ -23,3 +23,9 @@ REST ejecuta lecturas bloqueantes en workers (`@Blocking`); readiness usa un che
 El guard de paquetes rechaza CONNECT sin datos antes del handler de netty-socketio, que omite su AuthTokenListener para ese formato. Solo se admite Engine.IO 4 y el namespace raíz tiene el verificador. No hay namespaces de negocio. El callback ConnectListener de esta biblioteca sucede antes de la autenticación de namespace: no se usa como prueba de identidad.
 
 ArchUnit verifica clases reales: entrada sin dependencia directa de casos de uso/adaptadores de salida y núcleo sin dependencias de infraestructura/frameworks. Las entidades futuras de persistencia deben permanecer separadas del dominio.
+
+## Identidad Sprint 1
+
+`ReadSession`, `CompleteProfile`, `GetMyProfile` y `Logout` son puertos de entrada implementados por casos de uso puros. `ProfileRepository` y `SessionGateway` son puertos de salida. La transacción Firestore y Firebase Auth permanecen en infraestructura; el dominio define perfiles, normalización y política de correo.
+
+Quarkus Security extrae Bearer y ejecuta la validación Firebase en workers mediante un IdentityProvider. Las rutas privadas requieren rol derivado de estado COMPLETE en servidor; las excepciones para bootstrap/finalización/logout solo exigen sesión. El controlador nunca acepta uid o email del formulario. La lectura de sesión no escribe documentos; la finalización crea perfil y reserva atómicamente.

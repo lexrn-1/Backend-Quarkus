@@ -22,7 +22,7 @@ public class IdentityController {
     @Inject Logout logout;
     public record SessionResponse(String uid,String email,String displayName,String photoUrl,String provider,
                                   String status,boolean profileComplete,String nextAction) {}
-    @GET @Path("/session") @Operation(summary="Reconoce la sesión y prepara un perfil pendiente si no existe")
+    @GET @Path("/session") @Operation(summary="Consulta la sesión; sin perfil persistido devuelve PENDING de forma reintentable")
     public SessionResponse session() {
         var identity = current.get(); var profile = readSession.execute(identity);
         return new SessionResponse(identity.uid(),identity.email(),identity.displayName(),identity.photoUrl(),identity.provider(),

@@ -10,6 +10,7 @@ Ambos hijos heredan únicamente versiones/build del padre. Cada uno declara sus 
 | `APP_ALLOWED_ORIGINS` | http://localhost:4200; lista separada por comas |
 | `APP_DEMO_DOCUMENT` | demo/sprint0, documento con campo string message |
 | `APP_SOCKET_PORT` | 9092 |
+| `APP_ALLOWED_EMAIL_DOMAINS` | Vacía; restricción institucional pendiente; lista separada por comas |
 | `APP_PROOF_SESSION` | Lista de identificadores de sesiones técnicas locales; vacía por defecto |
 | `QUARKUS_PROFILE` | prod por defecto; local para emuladores |
 | `FIRESTORE_EMULATOR_HOST` | host:puerto sin esquema; solo local/test |
@@ -34,3 +35,5 @@ El modo local exige ambos emuladores. Producción rechaza sus variables y el mod
 Las dependencias Netty quedan mediadas por el BOM Quarkus. Usar `./mvnw -pl backend-realtime dependency:tree -Dincludes=io.netty` para consultar la resolución exacta. La compatibilidad local no demuestra funcionamiento por Traefik/WSS ni transmisión WebRTC.
 
 Referencias: [Firebase Admin](https://firebase.google.com/docs/admin/setup), [netty-socketio](https://github.com/mrniko/netty-socketio), [protocolo Socket.IO](https://socket.io/docs/v4/socket-io-protocol/).
+
+Sprint 1: los ID tokens password/Google se verifican con Firebase Admin y revocación habilitada. API consulta perfil y logout; realtime exige COMPLETE y revisa estado/revocación antes de eventos. Ver [identidad](identidad.md).

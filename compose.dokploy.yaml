@@ -8,6 +8,7 @@ services:
       GOOGLE_CLOUD_PROJECT: ${FIREBASE_PROJECT_ID:?Definir proyecto Firebase}
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase.json
       APP_ALLOWED_ORIGINS: ${FRONTEND_ORIGIN:?Definir origen Angular HTTPS}
+      APP_ALLOWED_EMAIL_DOMAINS: ${APP_ALLOWED_EMAIL_DOMAINS:-}
     volumes:
       - type: bind
         source: ${API_FIREBASE_CREDENTIALS_FILE:?Ruta absoluta a credenciales API}

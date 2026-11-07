@@ -15,10 +15,6 @@ class ProfileUseCasesTest {
     private static class Profiles implements ProfileRepository {
         UserProfile stored;
         public Optional<UserProfile> find(String uid) { return Optional.ofNullable(stored); }
-        public UserProfile ensurePending(AuthenticatedUser u) {
-            if (stored == null) stored = new UserProfile(u.uid(),u.email(),null,null,null,null,null,UserProfile.Status.PENDING,null,null);
-            return stored;
-        }
         public UserProfile complete(AuthenticatedUser u, ProfileDraft d) {
             stored = new UserProfile(u.uid(),u.email(),d.firstName(),d.lastName(),d.username(),d.usernameNormalized(),d.avatar(),UserProfile.Status.COMPLETE,null,null);
             return stored;

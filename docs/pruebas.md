@@ -22,3 +22,9 @@ No registrar tokens ni cuerpos de auth. El logger de errores crudos InPacketHand
 - Angular → API → Firestore con estados de carga/error/éxito y sin errores de consola.
 - simple-peer/ICE en dos dispositivos/redes, incluido TURN; no validado con señales sintéticas.
 - Accesibilidad TS-04, Lighthouse y evidencias públicas/PR exigidas por las historias originales.
+
+## Identidad Sprint 1
+
+La misma suite incluye alta/login Email/Password con Firebase Auth emulado, Google emulado inicial/recurrente, perfil pendiente/privado, username concurrente con un ganador, idempotencia, validaciones y rechazo de uid/email impuestos, expiración y logout. También prueba reintentar la finalización después de fallo Firestore sin crear otra cuenta Auth. Las unitarias cubren reglas y casos de uso; el emulador verifica transacciones reales.
+
+Pendientes de frontend: ventanas Google/cancelación, mensajes junto a campos, conservación del formulario, retorno a ruta solicitada, navegación atrás y accesibilidad. Pendientes de producción: firma real y configuración proveedores/dominios/política de contraseña, QA publicado y PR. La lista institucional se dejó pendiente por decisión del usuario.

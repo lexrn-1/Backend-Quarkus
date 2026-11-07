@@ -4,6 +4,7 @@ import { once } from 'node:events';
 import { createWriteStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
+import { runIdentityChecks, runRecoveryChecks, runAccountSecurityChecks, runEmailPolicyChecks } from './identity.mjs';
 import { createConnection } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -41,12 +42,6 @@ async function seed(message) {
     body: JSON.stringify({fields:{message:{stringValue:message}}})
   });
   assert.equal(r.status, 200);
-}
-async function token() {
-  const r = await fetch(`${auth}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=local`, {
-    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({returnSecureToken:true})
-  });
-  assert.equal(r.status,200); return (await r.json()).idToken;
 }
 function connection(authData, transport = 'websocket', extraOrigin = origin) {
   const s = io(`http://127.0.0.1:${socketPort}`, {
@@ -87,10 +82,21 @@ try {
   const deniedCors=await fetch(url,{headers:{Origin:'https://evil.invalid'}});
   assert.notEqual(deniedCors.headers.get('access-control-allow-origin'),'https://evil.invalid');
   console.log('PASS demo: 404, lectura real del emulador, actualización sin caché, CORS, health y Swagger');
-  const goodToken=await token();
+  const preflight=await fetch(`http://127.0.0.1:${apiPort}/api/v1/me/complete`,{method:'OPTIONS',headers:{
+    Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'}});
+  assert.ok([200,204].includes(preflight.status));
+  assert.equal(preflight.headers.get('access-control-allow-origin'),origin);
+  assert.ok(preflight.headers.get('access-control-allow-methods').includes('POST'));
+  const spec=await (await fetch(`http://127.0.0.1:${apiPort}/q/openapi`,{headers:{Accept:'application/json'}})).json();
+  assert.equal(spec.components.securitySchemes.FirebaseBearer.scheme,'bearer');
+  assert.ok(spec.paths['/api/v1/me/complete'].post.security.some(s=>s.FirebaseBearer));
+  const {goodToken,pendingToken,revokedToken}=await runIdentityChecks({api:`http://127.0.0.1:${apiPort}/api/v1`,auth});
+  await runAccountSecurityChecks({api:`http://127.0.0.1:${apiPort}/api/v1`,auth});
   const direct=await fetch(`${firestore}/v1/projects/${project}/databases/(default)/documents/demo/sprint0`,{headers:{Authorization:`Bearer ${goodToken}`}});
   assert.equal(direct.status,403);
   console.log('PASS reglas Firestore: acceso directo del cliente denegado');
+  await rejected(connection({token:pendingToken,proofSession:'session-a'}), 'perfil incompleto');
+  await rejected(connection({token:revokedToken,proofSession:'session-a'}), 'sesión cerrada');
   await rejected(connection(undefined), "sin auth");
   await rejected(connection({}), "auth vacío");
   await rejected(connection({token:'invalid',proofSession:'session-a'}), 'token inválido');
@@ -116,11 +122,20 @@ try {
   const reconnected=once(a,'connect',{signal:AbortSignal.timeout(15000)}); a.io.engine.close(); await reconnected;
   assert.equal((await ack(a,'proof:ping')).ok,true);
   console.log('PASS Socket.IO: auth, rechazo sin token/inválido/origen, polling, websocket, ack, aislamiento y reconexión');
+  const loggedOut=await fetch(`http://127.0.0.1:${apiPort}/api/v1/session/logout`,{method:'POST',headers:{Authorization:`Bearer ${goodToken}`}});
+  assert.equal(loggedOut.status,204);
+  const kicked=once(a,'disconnect',{signal:AbortSignal.timeout(8000)});
+  a.emit('proof:ping',{}); await kicked;
+  console.log('PASS realtime: logout invalida eventos de una conexión que ya estaba abierta');
   launch('backend-api',18082,{FIRESTORE_EMULATOR_HOST:'127.0.0.1:1'});
   await waitFor('http://127.0.0.1:18082/q/health/live');
   assert.equal((await fetch('http://127.0.0.1:18082/api/v1/demo')).status,503);
   assert.equal((await fetch('http://127.0.0.1:18082/q/health/ready')).status,503);
   console.log('PASS dependencia caída: demo 503, readiness DOWN y liveness UP');
+  await runRecoveryChecks({api:`http://127.0.0.1:${apiPort}/api/v1`,failedApi:'http://127.0.0.1:18082/api/v1',auth});
+  launch('backend-api',18085,{APP_ALLOWED_EMAIL_DOMAINS:'university.edu.co'});
+  await waitFor('http://127.0.0.1:18085/q/health/ready');
+  await runEmailPolicyChecks({api:'http://127.0.0.1:18085/api/v1',auth});
   for (const [module,port] of [['backend-api',18083],['backend-realtime',18084]]) {
     const child=launch(module,port,{QUARKUS_PROFILE:'prod'});
     const exited=once(child,'exit');

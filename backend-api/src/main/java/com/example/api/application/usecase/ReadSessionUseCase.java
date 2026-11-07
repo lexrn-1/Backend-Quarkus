@@ -6,6 +6,10 @@ public class ReadSessionUseCase implements ReadSession {
     private final ProfileRepository profiles;
     public ReadSessionUseCase(ProfileRepository profiles) { this.profiles = profiles; }
     public UserProfile execute(AuthenticatedUser user) {
-        var profile = profiles.ensurePending(user); profile.requireAvailable(); return profile;
+        // A Firebase account without a Firestore profile is a recoverable pending profile.
+        // GET remains read-only; the first successful completion creates the document atomically.
+        var profile = profiles.find(user.uid()).orElseGet(() -> new UserProfile(user.uid(), user.email(),
+            null, null, null, null, null, UserProfile.Status.PENDING, null, null));
+        profile.requireAvailable(); return profile;
     }
 }
