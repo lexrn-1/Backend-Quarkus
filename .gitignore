@@ -1,0 +1,14 @@
+**/target/
+.env
+.idea/
+.vscode/
+*.iml
+*.log
+.DS_Store
+
+**/node_modules/
+**/*debug.log
+secrets/
+*-firebase-adminsdk-*.json
+.env.*
+!.env.example

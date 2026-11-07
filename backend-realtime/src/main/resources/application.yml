@@ -1,0 +1,40 @@
+quarkus:
+  log:
+    category:
+      "com.corundumstudio.socketio.handler.InPacketHandler":
+        level: "OFF"
+  application:
+    name: backend-realtime
+  http:
+    host: 0.0.0.0
+    port: ${HTTP_PORT:8081}
+    cors:
+      enabled: true
+      origins: ${APP_ALLOWED_ORIGINS:https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}
+      methods: GET,OPTIONS
+      headers: Authorization,Content-Type
+  swagger-ui:
+    always-include: true
+app:
+  firebase:
+    project-id: ${GOOGLE_CLOUD_PROJECT:demo-app-meet}
+    emulator-enabled: false
+  demo:
+    document: ${APP_DEMO_DOCUMENT:demo/sprint0}
+  socket:
+    port: ${APP_SOCKET_PORT:9092}
+    enabled: true
+    proof-enabled: false
+    proof-session: ${APP_PROOF_SESSION:}
+"%local":
+  app:
+    firebase:
+      emulator-enabled: true
+    socket:
+      proof-enabled: true
+"%test":
+  app:
+    firebase:
+      emulator-enabled: true
+    socket:
+      enabled: false

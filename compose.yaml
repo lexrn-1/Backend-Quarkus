@@ -1,0 +1,36 @@
+services:
+  backend-api:
+    build:
+      context: .
+      dockerfile: backend-api/Dockerfile
+    restart: unless-stopped
+    environment: &local-env
+      QUARKUS_PROFILE: local
+      HTTP_PORT: "8080"
+      GOOGLE_CLOUD_PROJECT: demo-app-meet
+      FIRESTORE_EMULATOR_HOST: firebase-emulators:8085
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulators:9099
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-${FRONTEND_ORIGIN:-https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}}
+      APP_ALLOWED_EMAIL_DOMAINS: ${APP_ALLOWED_EMAIL_DOMAINS:-}
+    ports:
+      - "127.0.0.1:8080:8080"
+  backend-realtime:
+    build:
+      context: .
+      dockerfile: backend-realtime/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *local-env
+      APP_SOCKET_PORT: "9092"
+      APP_PROOF_SESSION: ${APP_PROOF_SESSION:-local-proof}
+    ports:
+      - "127.0.0.1:8081:8080"
+      - "127.0.0.1:9092:9092"
+  firebase-emulators:
+    profiles: [emulators]
+    build:
+      context: .
+      dockerfile: tests/emulators/Dockerfile
+    ports:
+      - "127.0.0.1:8085:8085"
+      - "127.0.0.1:9099:9099"

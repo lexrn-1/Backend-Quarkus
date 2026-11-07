@@ -1,0 +1,54 @@
+quarkus:
+  application:
+    name: backend-api
+  http:
+    host: 0.0.0.0
+    port: ${HTTP_PORT:8080}
+    cors:
+      enabled: true
+      origins: ${APP_ALLOWED_ORIGINS:https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}
+      methods: GET,POST,OPTIONS
+      headers: Authorization,Content-Type
+    auth:
+      permission:
+        business:
+          paths: /api/v1/*
+          policy: complete-profile
+        bootstrap:
+          paths: /api/v1/session,/api/v1/session/logout,/api/v1/me/complete
+          policy: authenticated
+        demo:
+          paths: /api/v1/demo
+          policy: permit
+      policy:
+        complete-profile:
+          roles-allowed: user
+  jackson:
+    fail-on-unknown-properties: true
+  swagger-ui:
+    always-include: true
+app:
+  identity:
+    allowed-email-domains: ${APP_ALLOWED_EMAIL_DOMAINS:}
+  firebase:
+    project-id: ${GOOGLE_CLOUD_PROJECT:demo-app-meet}
+    emulator-enabled: false
+  demo:
+    document: ${APP_DEMO_DOCUMENT:demo/sprint0}
+  socket:
+    port: ${APP_SOCKET_PORT:9092}
+    enabled: true
+    proof-enabled: false
+    proof-session: ${APP_PROOF_SESSION:}
+"%local":
+  app:
+    firebase:
+      emulator-enabled: true
+    socket:
+      proof-enabled: true
+"%test":
+  app:
+    firebase:
+      emulator-enabled: true
+    socket:
+      enabled: false

@@ -1,0 +1,25 @@
+Verificación local Sprint 0 — 2026-11-07 (America/Bogota)
+Sin publicación remota; sin credenciales Firebase reales.
+
+./mvnw -B -ntp clean verify: BUILD SUCCESS
+backend-api: 5 pruebas; backend-realtime: 2 pruebas; 0 fallos.
+
+npm run verify:
+PASS demo: 404, lectura real del emulador, actualización sin caché, CORS, health y Swagger
+PASS reglas Firestore: acceso directo del cliente denegado
+PASS Socket.IO: auth, rechazo sin token/inválido/origen, polling, websocket, ack, aislamiento y reconexión
+PASS dependencia caída: demo 503, readiness DOWN y liveness UP
+PASS producción: ambos servicios rechazan variables de emuladores al iniciar
+PASS procesos cerrados; prueba local finalizada (sin Firebase real, TLS ni WebRTC)
+✔  Script exited successfully (code 0) 
+
+Compose local y Dokploy: docker compose config --quiet: OK (valores de producción ilustrativos).
+Docker build/up: pendiente por permission denied en /var/run/docker.sock.
+Resolución Netty: 4.1.138.Final (dependency:tree).
+
+Comprobación posterior de conexión Firebase real (2026-11-07):
+./mvnw -B -ntp verify: BUILD SUCCESS; 7 pruebas aprobadas.
+backend-api y backend-realtime: readiness UP con Firestore real.
+GET /api/v1/demo: HTTP 404, documento demo/sprint0 ausente.
+Credencial externa configurada mediante .env; sin claves en código ni imágenes.
+Solo lecturas; procesos de comprobación cerrados; sin despliegue ni reglas publicadas.

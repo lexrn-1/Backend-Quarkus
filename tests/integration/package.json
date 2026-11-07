@@ -1,0 +1,16 @@
+{
+  "name": "app-meet-sprint0-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node check.mjs",
+    "emulators": "firebase emulators:start --project demo-app-meet --config ../../firebase.json --only auth,firestore",
+    "verify": "firebase emulators:exec --project demo-app-meet --config ../../firebase.json --only auth,firestore \"node check.mjs\""
+  },
+  "dependencies": {
+    "socket.io-client": "4.8.4"
+  },
+  "devDependencies": {
+    "firebase-tools": "15.35.0"
+  }
+}
