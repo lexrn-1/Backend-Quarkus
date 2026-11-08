@@ -1,7 +1,7 @@
 name: Backend sprints 0 y 1
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -68,7 +68,7 @@ jobs:
         shell: bash
         run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
-        if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/master'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
