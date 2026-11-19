@@ -1,0 +1,66 @@
+EVIDENCIA LOCAL — SALAS, CHAT Y MEDIOS
+Fecha: 2026-11-19 (America/Bogota)
+Repositorios: backend y frontln, rama develop en ambos. Cambios locales, sin commit/push/publicación.
+
+Entorno: Java 21, Quarkus 3.40.1, Firebase Admin 9.11.0, netty-socketio 2.0.13,
+socket.io-client 4.8.4, simple-peer 9.11.1, Angular 17, Node 22.16.0,
+pnpm 10.11.0, Firebase CLI 15.35.0, Playwright 1.56.1 / Chromium 141.
+Proyecto de pruebas: demo-app-meet, Auth y Firestore emulados. Sin credenciales reales.
+
+VERIFICACIONES
+PASS ./mvnw -B -ntp clean verify
+     backend-api: 18 pruebas; backend-realtime: 6; cero fallos/errores.
+     Incluye dominio, admisión concurrente y ArchUnit sobre clases reales.
+PASS tests/integration: Firebase emulators:exec + check.mjs
+     Demo 404/200/cambio sin caché, dependencia 503, readiness/liveness, Swagger, CORS.
+     Identidad: registro/login, perfil completo, username, revocación/logout y reglas Firestore.
+     Salas: crear, validar nombre/UUID, unión idempotente, roles, listado y cursor.
+     Invitado: GET sin membresía 403; PATCH/DELETE ajenos 403.
+     Socket.IO: token requerido, perfil completo, orígenes, polling/WebSocket, aislamiento.
+     Seis admisiones concurrentes; séptima ROOM_FULL. Estados y señalización aislados.
+     Chat: persistencia antes de ack, sender derivado, retry mismo ID, conflicto al cambiar texto.
+     Historial: páginas before/after exclusivas, orden estable, autenticación/membresía/cursor.
+     Eliminar: room:deleted, bloqueo de escrituras, subcolecciones vacías y job DONE.
+     Recuperación: con API detenida se simuló estado DELETING + job PENDING persistido;
+     un proceso nuevo retomó el job y eliminó mensajes/membresías sin dejar huérfanos.
+     Esto prueba recuperación de un estado pendiente; no simula fallo dentro del commit Firestore.
+PASS pnpm run build (producción) y pnpm run build:integration
+     El build normal apunta al origen HTTPS del gateway, sin mocks ni bypass de desarrollo.
+     El build integration es solo local, no se publica.
+PASS pnpm run test:ci: 97 pruebas Angular, cero fallos.
+     Incluye UUID real, HTTP de salas, historial/live simultáneo, deduplicación,
+     descarte de respuestas después de logout y captura que termina de autorizar tras salir.
+PASS pnpm run test:e2e: 2 escenarios completos, 2 passed.
+     Seis contextos de navegador autenticados; cinco pares/vídeos remotos por navegador.
+     Cámaras y micrófonos ficticios; pantalla de canvas; todos en la misma máquina.
+     Reemplazo/restauración de pista y parada de pantalla por evento ended.
+     Chat recibido una vez, persistencia al recargar y recuperación tras desconexión.
+     Permiso denegado conserva chat. Salir detiene pistas y cierra pares.
+     Eliminación lleva participantes al dashboard. Sin errores JavaScript capturados.
+     Enlace directo protegido vuelve a sala tras login; copia al portapapeles anunciada;
+     edición OWNER actualiza participante; invitado sin controles de editar/eliminar.
+PASS docker compose -f compose.yaml --profile emulators config --quiet
+PASS docker compose -f compose.dokploy.yaml -f compose.gateway.yaml config --quiet
+     Variables de ejemplo sin credenciales; valida sintaxis/combinación, no contenedores.
+
+LIMITACIONES Y PENDIENTES EXTERNOS
+- Docker CLI existe, pero el usuario de ejecución no accede a /var/run/docker.sock.
+  docker info: permission denied. sudo no interactivo requiere contraseña.
+  No se construyeron imágenes ni se arrancó Compose en esta entrega.
+- No se publicaron GitHub/GHCR/Dokploy/Vercel ni se aplicaron índices/reglas a Firebase real.
+- No se validaron firmas con Firebase real en estas pruebas; los tokens son de Auth emulado.
+- No se acreditan HTTPS/WSS público, reconexión por Traefik, ni TURN entre redes/dispositivos.
+- TURN_USERNAME/TURN_PASSWORD vacíos o xxxxxxxx deshabilitan TURN; faltan valores reales.
+- El emulador no verifica índices productivos. Aplicar los índices versionados al publicar.
+- Capacidad/presencia en memoria: una réplica realtime; esto no certifica latencia bajo carga real.
+- Dominios institucionales siguen pendientes por decisión del usuario.
+- Catálogo, horarios, adjuntos, tablero, no leídos y edición/borrado de perfiles fuera de alcance.
+
+REPRODUCCIÓN
+Backend: ./mvnw clean verify; cd tests/integration; npm ci; npm run verify.
+Frontend: Node 22.16.0 + pnpm 10.11.0; pnpm install --frozen-lockfile;
+pnpm exec playwright install chromium; pnpm run build; pnpm run test:ci;
+pnpm run build:integration. Después ejecutar emulators:exec + pnpm run test:e2e
+como se indica en frontln/docs/COLLABORATION.md.
+CHROME_BIN/E2E_CHROMIUM permiten usar un Chromium existente.
+No usar recursos, tokens ni credenciales reales en estas pruebas.

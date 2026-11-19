@@ -12,6 +12,11 @@ services:
       FIREBASE_AUTH_EMULATOR_HOST: firebase-emulators:9099
       APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-${FRONTEND_ORIGIN:-https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}}
       APP_ALLOWED_EMAIL_DOMAINS: ${APP_ALLOWED_EMAIL_DOMAINS:-}
+      STUN_URL: ${STUN_URL:-stun:stun.l.google.com:19302}
+      TURN_HOST: ${TURN_HOST:-free.expressturn.com}
+      TURN_PORT: ${TURN_PORT:-3478}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_PASSWORD: ${TURN_PASSWORD:-}
     ports:
       - "127.0.0.1:8080:8080"
   backend-realtime:
@@ -22,6 +27,7 @@ services:
     environment:
       <<: *local-env
       APP_SOCKET_PORT: "9092"
+      APP_SOCKET_PROOF_ENABLED: "false"
       APP_PROOF_SESSION: ${APP_PROOF_SESSION:-local-proof}
     ports:
       - "127.0.0.1:8081:8080"

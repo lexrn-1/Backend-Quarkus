@@ -7,7 +7,7 @@ quarkus:
     cors:
       enabled: true
       origins: ${APP_ALLOWED_ORIGINS:https://frontln.vercel.app,http://localhost:4200,http://127.0.0.1:4200}
-      methods: GET,POST,OPTIONS
+      methods: GET,POST,PATCH,DELETE,OPTIONS
       headers: Authorization,Content-Type
     auth:
       permission:
@@ -28,6 +28,12 @@ quarkus:
   swagger-ui:
     always-include: true
 app:
+  ice:
+    stun: ${STUN_URL:stun:stun.l.google.com:19302}
+    turn-host: ${TURN_HOST:free.expressturn.com}
+    turn-port: ${TURN_PORT:3478}
+    turn-username: ${TURN_USERNAME:}
+    turn-password: ${TURN_PASSWORD:}
   identity:
     allowed-email-domains: ${APP_ALLOWED_EMAIL_DOMAINS:}
   firebase:

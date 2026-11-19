@@ -32,3 +32,7 @@ Pendientes de frontend: ventanas Google/cancelación, mensajes junto a campos, c
 Las verificaciones de Sprint 1 incluyen además cuentas Firebase deshabilitadas/eliminadas, revocación administrativa, preflight CORS, esquema Bearer en OpenAPI y dominios institucionales configurados en un proceso separado.
 
 El lanzador de integración limita cada backend a 256 MiB y dos CPU visibles, captura el cierre de procesos desde su creación y libera los servicios antes de las pruebas negativas de arranque. Estos límites son exclusivos de pruebas, no dimensionamiento de producción.
+
+## Extensión de salas/chat y frontend
+
+Maven incorpora dominio y concurrencia de colaboración; check.mjs ejecuta collaboration.mjs, incluida recuperación de un job pendiente tras reiniciar API. Angular añade 97 pruebas y dos escenarios Playwright con seis contextos y medios ficticios. [Matriz de aceptación](salas-chat-aceptacion.md), [evidencia](evidencias/salas-chat-local.txt) e instrucciones en frontln/docs/COLLABORATION.md. No confundir estas pruebas con Firebase real, TURN entre redes o publicación.

@@ -16,7 +16,7 @@ Ambos hijos heredan únicamente versiones/build del padre. Cada uno declara sus 
 | `FIRESTORE_EMULATOR_HOST` | host:puerto sin esquema; solo local/test |
 | `FIREBASE_AUTH_EMULATOR_HOST` | host:puerto sin esquema; solo local/test |
 
-El modo local exige ambos emuladores. Producción rechaza sus variables y el modo de prueba realtime. En producción el listener solo autentica conexiones: no registra eventos `proof:*` ni funcionalidades futuras. Los orígenes se comprueban tanto en REST como en el handshake Socket.IO; los clientes técnicos deben enviar Origin explícito.
+El modo local exige ambos emuladores. Producción rechaza sus variables y el modo de prueba realtime. En producción el listener autentica y registra los eventos de salas/chat/media/señalización implementados, sin `proof:*`. Los orígenes se comprueban tanto en REST como en el handshake Socket.IO; los clientes técnicos deben enviar Origin explícito.
 
 ## Matriz fijada
 
@@ -32,8 +32,10 @@ El modo local exige ambos emuladores. Producción rechaza sus variables y el mod
 | Firebase CLI | 15.35.0 |
 | ArchUnit | 1.4.1 |
 
-Las dependencias Netty quedan mediadas por el BOM Quarkus. Usar `./mvnw -pl backend-realtime dependency:tree -Dincludes=io.netty` para consultar la resolución exacta. La compatibilidad local no demuestra funcionamiento por Traefik/WSS ni transmisión WebRTC.
+Las dependencias Netty quedan mediadas por el BOM Quarkus. Usar `./mvnw -pl backend-realtime dependency:tree -Dincludes=io.netty` para consultar la resolución exacta. La compatibilidad backend se prueba con emuladores; las pruebas de navegador se registran por separado. No demuestran funcionamiento por Traefik/WSS ni entre redes reales.
 
 Referencias: [Firebase Admin](https://firebase.google.com/docs/admin/setup), [netty-socketio](https://github.com/mrniko/netty-socketio), [protocolo Socket.IO](https://socket.io/docs/v4/socket-io-protocol/).
 
 Sprint 1: los ID tokens password/Google se verifican con Firebase Admin y revocación habilitada. API consulta perfil y logout; realtime exige COMPLETE y revisa estado/revocación antes de eventos. Ver [identidad](identidad.md).
+
+Colaboración añade STUN_URL, TURN_HOST, TURN_PORT, TURN_USERNAME y TURN_PASSWORD. Ver [salas/chat](salas-chat.md). Frontend fijado: socket.io-client 4.8.4, simple-peer 9.11.1, @types/simple-peer 9.11.8, @types/node 20.12.7 (compatible con TypeScript 5.4) y Playwright 1.56.1 para pruebas.

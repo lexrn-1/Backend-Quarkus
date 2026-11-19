@@ -44,3 +44,7 @@ Desde la raíz del backend, con `.env` configurado y sin variables de emuladores
 Ejecutar en terminales separadas. No activar el perfil `local`, reservado para emuladores. En este entorno se comprobó acceso real de ambos servicios mediante readiness UP. La lectura de demo devolvió 404 porque `demo/sprint0` no existe; no se crearon documentos ni se publicaron reglas. El flujo de identidad se valida con emuladores; el handshake con un ID token de Firebase real sigue pendiente de verificación.
 
 Para probar el flujo demo, crear posteriormente `demo/sprint0` con un campo string `message` de contenido público. Esa escritura no forma parte de la comprobación de conexión. El despliegue con contenedores requiere montar la credencial en su ruta interna según la guía Dokploy; la ruta del equipo local no existe dentro de las imágenes.
+
+## Salas y chat
+
+Se añaden rooms, subcolecciones members/messages y roomDeletionJobs. Propiedad, transacciones, índices y ciclo de borrado: [salas/chat](salas-chat.md). Aplicar los índices del archivo versionado al proyecto real antes de publicar; el emulador no verifica su disponibilidad productiva. Las reglas actuales deniegan todo acceso Firestore directo del navegador; Angular consume REST/Socket.IO autenticados. No cambiar esas reglas para habilitar chat.
