@@ -1,7 +1,8 @@
-FROM eclipse-temurin:21-jdk-jammy AS build
+# Maven is preinstalled: building the image does not bootstrap it through mvnw/wget.
+FROM maven:3.9.16-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY . .
-RUN chmod +x mvnw && ./mvnw -B -ntp -pl backend-realtime -DskipTests package
+RUN mvn -B -ntp -pl backend-realtime -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-jammy
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \

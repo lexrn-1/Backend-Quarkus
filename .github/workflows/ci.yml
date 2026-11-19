@@ -78,4 +78,5 @@ jobs:
           context: .
           file: ${{ matrix.service }}/Dockerfile
           push: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/master' }}
+          load: ${{ !(github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/master') }}
           tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
