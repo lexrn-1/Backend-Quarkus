@@ -18,3 +18,5 @@
 | [Estado Sprint 0](sprint-0.md) | Evidencias y límites de aceptación |
 
 El plan Quarkus adapta el stack original a Java/Dokploy. Las historias de usuario conservan los criterios funcionales; Sprint 0/1 entregaron backend; la extensión de salas/chat integra también Angular. La documentación de origen no constituye evidencia de ejecución ni despliegue.
+
+[Corrección de chat y micrófono](chat-audio.md): diagnóstico, fallback de historial, sincronización de dispositivos y validación.

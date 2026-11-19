@@ -1,0 +1,54 @@
+CORRECCIÓN LOCAL: CHAT Y MICRÓFONO
+Fecha: 2026-11-19, America/Bogota.
+
+Diagnóstico público, sin credenciales ni operaciones sobre usuarios reales:
+- OpenAPI público de API ya anuncia salas.
+- GET sin token /api/v1/rooms/11111111-1111-4111-8111-111111111111/messages
+  devuelve 401 con "Sesión inválida o expirada", mensaje de backend-api.
+  Indicio de historial enrutado a API; corregir destino a realtime HTTP 8080.
+
+CAMBIOS
+- chat:history en realtime usa el mismo puerto de aplicación/persistencia que REST.
+- Frontend lo utiliza si historial REST responde 404/405, incluyendo errores normalizados
+  por el interceptor. No lo usa para 401, 403 o 5xx.
+- Historial fallido no bloquea envío en una conexión autenticada/admitida; conserva aviso,
+  mensajes nuevos y reintento. Cerrar sesión o salir sigue bloqueando envío.
+- Estado real de pistas audio/vídeo, detección de ended/mute/unmute y captura de pista nueva.
+- Sincronización de dispositivos con ack/reintento y republicación por connectionId.
+- Ack tardío no sustituye deltas de micrófono/presencia más recientes.
+- Reproducción remota reacciona a nuevas pistas y ofrece activación por gesto si hace falta.
+- WebSocket directo con fallback a polling; micrófono activo verde y tarjetas estables.
+
+VERIFICACIÓN
+PASS ./mvnw -B -ntp clean verify: API 18 + realtime 6 = 24; cero fallos/errores.
+PASS integración Node con Auth/Firestore emulados, proyecto demo-app-meet:
+  historial Socket.IO coincide en orden/paginación con REST; límite y uid inválidos
+  rechazados; otro miembro sin acceso a esa sala recibe FORBIDDEN.
+  Conserva verificaciones de identidad, revocación, reglas, CORS, salas, capacidad,
+  mensajería/idempotencia, aislamiento, borrado/recuperación y dependencia caída.
+PASS build de producción e integration del frontend, Node 22.16.0.
+PASS 109 pruebas unitarias Angular; incluye fallback con interceptor real, no bypass
+  de permisos, historial fallido con envío vivo, ack tardío, reintento/reconexión de
+  indicadores, pistas terminadas y reproducción de audio añadido más tarde.
+PASS suite Playwright completa: 4 passed.
+  - Historial REST enviado a API devuelve un 404 real; chat:history recupera mensajes
+    al recargar y chat:send sigue llegando al otro navegador.
+  - Micrófono sin cámara activado después de entrar: paquetes RTP de audio recibidos,
+    elemento remoto no pausado/no silenciado, indicador remoto activado.
+  - Mute/unmute se refleja remotamente.
+  - Cierre del WebSocket nativo: cambia connectionId, micrófono activo se republica,
+    vuelve a recibirse audio y siguen funcionando mensajes.
+  - El caso anterior usa política de autoplay document-user-activation-required,
+    sin forzar reproducción libre. Si el navegador lo exige se usa Activar audio.
+  - Chat autenticado funciona con WebSocket bloqueado mediante fallo asíncrono
+    de transporte y fallback a polling.
+  - Conserva malla de seis conexiones, cinco vídeos remotos, pantalla/restauración,
+    reconexión/historial, permisos, cierre de pistas, borrado, enlace/copia/edición.
+
+Medios ficticios y emuladores, todos locales. No acredita dispositivos físicos,
+firmas Firebase reales, TURN/relay entre redes distintas ni el despliegue publicado.
+No se publicaron commits, imágenes, frontend o backends durante esta corrección.
+Publicar backend-realtime y frontend de forma coordinada y corregir el router REST
+según compose.gateway.yaml. No modificar reglas Firestore para solucionar el chat.
+
+Código/contratos y pasos de comprobación: ../chat-audio.md.

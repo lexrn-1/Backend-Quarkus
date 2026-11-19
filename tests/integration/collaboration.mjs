@@ -72,6 +72,14 @@ export async function runCollaborationChecks({api,realtime,auth,socketPort,fires
   const catchup=await (await request(realtime,historyPath+`?limit=100&after=${encodeURIComponent(first.data.cursor)}`,owner.idToken)).json();assert.equal(catchup.items.length,34);
   assert.equal((await request(realtime,historyPath+'?before=bad',owner.idToken)).status,400);
   await delay(100);assert.equal(leaked,false);
+  const socketPage=await event(sender,'chat:history',room.id,{limit:10});assert.equal(socketPage.ok,true);assert.deepEqual(socketPage.data.items.map(m=>m.id),recent.items.map(m=>m.id));
+  const socketAfter=await event(sender,'chat:history',room.id,{limit:100,after:first.data.cursor});assert.equal(socketAfter.data.items.length,34);
+  const historyOutsider=clients[admissions.findIndex((a,i)=>a.ok && i>0)];
+  assert.equal((await event(historyOutsider,'chat:history',another.id,{limit:10})).error.code,'FORBIDDEN');
+  assert.equal((await event(sender,'chat:history',room.id,{limit:101})).error.code,'INVALID_CURSOR');
+  assert.equal((await event(sender,'chat:history',room.id,{limit:1.5})).error.code,'INVALID_CURSOR');
+  assert.equal((await event(sender,'chat:history',room.id,{uid:'spoof'})).error.code,'INVALID_EVENT');
+  console.log('PASS historial Socket.IO: mismo orden/cursor y permisos que REST, sin aceptar uid ni límites inválidos');
   console.log('PASS chat/historial: persistencia antes de ack, reintentos sin duplicados, aislamiento, cursor estable before/after y entradas rechazadas');
   const renamed=once(receiver,'room:updated',{signal:AbortSignal.timeout(10000)});
   assert.equal((await request(api,`/rooms/${room.id}`,owner.idToken,'PATCH',{name:'Renamed'})).status,200);assert.equal((await renamed)[0].payload.name,'Renamed');

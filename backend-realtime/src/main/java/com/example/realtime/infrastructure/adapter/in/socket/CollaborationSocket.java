@@ -20,7 +20,7 @@ public class CollaborationSocket {
   public void bind(SocketIOServer server) {
     this.server = server;
     for (String event :
-        List.of("room:join", "room:leave", "chat:send", "media:update", "rtc:signal"))
+        List.of("room:join", "room:leave", "chat:send", "chat:history", "media:update", "rtc:signal"))
       server.addEventListener(
           event, Map.class, (client, data, ack) -> handle(event, client, data, ack));
     server.addDisconnectListener(
@@ -98,6 +98,19 @@ public class CollaborationSocket {
                   roomId,
                   (String) payload.get("clientMessageId"),
                   (String) payload.get("text"));
+            }
+            case "chat:history" -> {
+              only(payload, Set.of("limit", "before", "after"));
+              Object limit = payload.getOrDefault("limit", 30);
+              if (!(limit instanceof Number number)
+                  || number.doubleValue() != number.intValue())
+                throw new CollaborationProblem("INVALID_CURSOR", "Límite de historial inválido");
+              yield collaboration.history(
+                  identity.uid(),
+                  roomId,
+                  number.intValue(),
+                  (String) payload.get("before"),
+                  (String) payload.get("after"));
             }
             case "media:update" -> {
               only(payload, Set.of("micOn", "camOn", "screenSharing"));
