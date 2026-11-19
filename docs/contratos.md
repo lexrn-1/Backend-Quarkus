@@ -62,10 +62,10 @@ Las respuestas de identidad llevan `Cache-Control: no-store`. Las rutas `/api/v1
 
 Socket.IO exige también perfil COMPLETE y comprueba revocación/estado antes de cada evento técnico. Su auth sigue siendo `{token,proofSession}` en laboratorio. No se aceptan perfiles pendientes aunque el ID token sea válido.
 
-## Propuesto para siguientes sprints: no disponible
+## Implementado: salas, presencia, chat e ICE
 
-REST de API: PATCH/DELETE `/api/v1/me`, GET/POST `/api/v1/rooms`, PATCH/DELETE `/api/v1/rooms/{id}`, POST `/api/v1/rooms/{id}/join` y GET `/api/v1/rtc/config`. Realtime REST: GET `/api/v1/rooms/{id}/messages` con cursor estable.
+Consultar [contrato completo de colaboración](salas-chat.md), incluyendo rutas y DTO, acks Socket.IO v1, autorización, paginación e idempotencia. API implementa salas/membresías y `/rtc/config`; realtime implementa historial HTTP y eventos de negocio. `proof:*` sigue siendo una prueba separada, exclusiva de laboratorio. El frame del listener es ahora 128 KiB (señales acotadas a 64 KiB).
 
-Eventos futuros: `room:join`, `room:leave`, `room:snapshot`, `room:deleted`, `participant:joined`, `participant:left`, `chat:send`, `chat:message`, `media:update` y `rtc:signal`. Envoltura propuesta `{v,eventId,roomId,payload}` y ack `{ok,data,error}`. Se exigirán sesión, perfil y membresía según historia; no se aceptarán roles o uid impuestos por el navegador. Login y Google pertenecen a Firebase Auth, sin emisor paralelo.
+## Aún no disponible
 
-Errores previstos: 400 validación, 401 sesión, 403 permisos, 404 recurso, 409 conflicto y 503 dependencia. Estos contratos futuros no forman parte del OpenAPI implementado.
+PATCH/DELETE `/api/v1/me`, catálogo, horarios, adjuntos, tablero y contadores de no leídos. No llamar rutas `/chats`, `/files`, `/board` ni REST `/leave`.

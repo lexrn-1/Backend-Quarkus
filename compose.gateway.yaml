@@ -1,0 +1,30 @@
+# Overlay opcional: un único dominio con tres destinos. No crea un tercer servicio.
+# docker compose -f compose.dokploy.yaml -f compose.gateway.yaml config
+# En Dokploy quitar las dos rutas '/' duplicadas generadas en la UI antes de usar estas labels.
+services:
+  backend-api:
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${DOKPLOY_NETWORK:?Definir red del proxy}
+      - traefik.http.routers.appmeet-api.rule=Host(`${BACKEND_HOST:-api.5-253-232-179.sslip.io}`)
+      - traefik.http.routers.appmeet-api.priority=100
+      - traefik.http.routers.appmeet-api.entrypoints=websecure
+      - traefik.http.routers.appmeet-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.appmeet-api.service=appmeet-api
+      - traefik.http.services.appmeet-api.loadbalancer.server.port=8080
+  backend-realtime:
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${DOKPLOY_NETWORK:?Definir red del proxy}
+      - traefik.http.routers.appmeet-socket.rule=Host(`${BACKEND_HOST:-api.5-253-232-179.sslip.io}`) && PathPrefix(`/socket.io/`)
+      - traefik.http.routers.appmeet-socket.priority=200
+      - traefik.http.routers.appmeet-socket.entrypoints=websecure
+      - traefik.http.routers.appmeet-socket.tls.certresolver=letsencrypt
+      - traefik.http.routers.appmeet-socket.service=appmeet-socket
+      - traefik.http.services.appmeet-socket.loadbalancer.server.port=9092
+      - traefik.http.routers.appmeet-history.rule=Host(`${BACKEND_HOST:-api.5-253-232-179.sslip.io}`) && PathRegexp(`^/api/v1/rooms/[a-fA-F0-9-]+/messages$`)
+      - traefik.http.routers.appmeet-history.priority=300
+      - traefik.http.routers.appmeet-history.entrypoints=websecure
+      - traefik.http.routers.appmeet-history.tls.certresolver=letsencrypt
+      - traefik.http.routers.appmeet-history.service=appmeet-history
+      - traefik.http.services.appmeet-history.loadbalancer.server.port=8080

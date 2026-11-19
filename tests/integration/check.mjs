@@ -4,6 +4,7 @@ import { once } from 'node:events';
 import { createWriteStream, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
+import { runCollaborationChecks } from './collaboration.mjs';
 import { runIdentityChecks, runRecoveryChecks, runAccountSecurityChecks, runEmailPolicyChecks } from './identity.mjs';
 import { createConnection } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -32,6 +33,7 @@ function launch(module, port, overrides = {}) {
   return child;
 }
 async function stop(child) {
+  child.expectedStop=true;
   if (child.exitCode !== null || child.signalCode !== null) return child.finished;
   const forced = setTimeout(() => child.kill('SIGKILL'), 15000);
   child.kill('SIGTERM');
@@ -41,7 +43,7 @@ async function stop(child) {
 async function waitFor(url, status = 200) {
   for (let n = 0; n < 120; n++) {
     try { const r = await fetch(url, {signal: AbortSignal.timeout(4000)}); if (r.status === status) return r; } catch {}
-    if (children.some(c => c.exitCode !== null)) throw new Error('Un backend terminó; revisar target/integration-*.log');
+    if (children.some(c => !c.expectedStop && c.exitCode !== null)) throw new Error('Un backend terminó; revisar target/integration-*.log');
     await delay(250);
   }
   throw new Error(`Timeout: ${url}`);
@@ -77,7 +79,7 @@ async function rejected(s, label) {
 }
 const ack = (s,event,data={}) => new Promise((resolve,reject)=>s.timeout(5000).emit(event,data,(err,response)=>err?reject(err):resolve(response)));
 try {
-  launch('backend-api',apiPort); launch('backend-realtime',rtPort);
+  let runningApi=launch('backend-api',apiPort); launch('backend-realtime',rtPort);
   for (const port of [apiPort,rtPort]) {
     await waitFor(`http://127.0.0.1:${port}/q/health/ready`);
     for (const path of ['/q/health/live','/q/openapi','/q/swagger-ui/'])
@@ -146,6 +148,7 @@ try {
   const reconnected=once(a,'connect',{signal:AbortSignal.timeout(15000)}); a.io.engine.close(); await reconnected;
   assert.equal((await ack(a,'proof:ping')).ok,true);
   console.log('PASS Socket.IO: auth, rechazo sin token/inválido/origen, polling, websocket, ack, aislamiento y reconexión');
+  await runCollaborationChecks({api:`http://127.0.0.1:${apiPort}/api/v1`,realtime:`http://127.0.0.1:${rtPort}/api/v1`,auth,socketPort,firestore,restartApi:async beforeStart=>{await stop(runningApi);await beforeStart();runningApi=launch('backend-api',apiPort);await waitFor(`http://127.0.0.1:${apiPort}/q/health/ready`);}});
   const loggedOut=await fetch(`http://127.0.0.1:${apiPort}/api/v1/session/logout`,{method:'POST',headers:{Authorization:`Bearer ${goodToken}`}});
   assert.equal(loggedOut.status,204);
   const kicked=once(a,'disconnect',{signal:AbortSignal.timeout(8000)});

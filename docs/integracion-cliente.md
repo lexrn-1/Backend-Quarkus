@@ -86,4 +86,8 @@ Los detalles de registro/login/Google/logout y validaciones están en [identidad
 
 Usar `socket.io-client` 4.x con `path: '/socket.io/'` y `auth: {token: await user.getIdToken()}`. El backend exige perfil COMPLETE, token válido y un origen permitido. Actualizar el token antes de reconectar.
 
-Solo en laboratorio local, añadir `proofSession` autorizado por `APP_PROOF_SESSION`. Los eventos `proof:ping` y `proof:signal` son pruebas técnicas; no están habilitados en producción. Todavía no existen contratos implementados de salas/chat/audio/video; consultar [contratos](contratos.md) para distinguir los eventos futuros.
+Solo al habilitar la prueba técnica en laboratorio local, añadir `proofSession` autorizado por `APP_PROOF_SESSION`. Los eventos `proof:ping` y `proof:signal` son pruebas técnicas; no están habilitados en producción. Los contratos de salas, chat, historial y señalización están implementados en esta entrega: [guía completa](salas-chat.md). Es necesario publicar las nuevas versiones y enrutar historial a realtime HTTP antes de consumirlos desde Vercel.
+
+## Salas y conversación
+
+El frontend hermano `frontln` usa los DTO y eventos de [salas/chat](salas-chat.md). Crear/renombrar acepta solo `{name}`. El ID es UUID v4, se comparte como ID o `/salas/{id}`. Dashboard muestra salas propias; Chats las membresías. Todos los mensajes se envían por `chat:send`, no por POST REST; historial por GET `/rooms/{id}/messages`. No hay rutas `/chats`, lectura/no leídos ni adjuntos. El gateway debe distinguir ese GET de las operaciones de salas de API. La conexión de producto usa `auth:{token}` y perfil completo; no usa proofSession en producción.

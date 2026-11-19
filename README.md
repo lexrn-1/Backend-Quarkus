@@ -1,13 +1,13 @@
-# app_meet — Backend de sprints 0 y 1
+# app_meet — Identidad, salas y colaboración
 
 Dos microservicios Java 21 / Quarkus 3.40.1, con arquitectura hexagonal y Maven Wrapper 3.9.16:
 
 | Servicio | Paquete | HTTP local | Responsabilidad implementada |
 |---|---|---|---|
-| backend-api | com.example.api | 8080 | Sesiones Firebase, perfiles, username único y demo Firestore |
-| backend-realtime | com.example.realtime | 8081 | Socket.IO 9092 con sesión válida y perfil completo |
+| backend-api | com.example.api | 8080 | Identidad, perfiles, salas, membresías, limpieza e ICE |
+| backend-realtime | com.example.realtime | 8081 | Socket.IO 9092, presencia, chat persistente, historial y señalización WebRTC |
 
-La prueba técnica de señalización está habilitada únicamente en el perfil local con emuladores. El sprint 1 incluye el soporte backend para US-01/02/03. El registro, Google y login se realizan con Firebase Auth; la API valida sus ID tokens, completa perfiles, reserva usernames y protege el acceso. No hay edición/borrado de perfiles, salas, chat, Angular ni WebRTC funcional. La publicación y el cierre end-to-end siguen pendientes.
+La prueba técnica de señalización está habilitada únicamente en el perfil local con emuladores. El sprint 1 incluye el soporte backend para US-01/02/03. El registro, Google y login se realizan con Firebase Auth; la API valida sus ID tokens, completa perfiles, reserva usernames y protege el acceso. Esta entrega incorpora salas y colaboración y conecta el frontend Angular del repositorio hermano `frontln`. No implementa edición/borrado de perfiles, catálogo, adjuntos o tablero. La publicación y las pruebas de medios entre redes reales siguen pendientes. Ver [contratos y arquitectura de colaboración](docs/salas-chat.md) y [validación](docs/evidencias/salas-chat-local.txt).
 
 ## Autenticación y acceso (Sprint 1)
 
