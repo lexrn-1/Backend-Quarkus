@@ -43,6 +43,7 @@ Solicitud: `{v:1,roomId,payload}`. Ack: `{ok:true,data}` o `{ok:false,error:{cod
 |---|---|
 | room:join | `{}`; ack/snapshot `{roomId,connectionId,name,ownerUid,participants,maxConnections}` |
 | room:leave | `{}`; retira presencia, conserva membresía |
+| chat:history | `{limit?,before?,after?}`; ack página de historial, mismas autorizaciones que REST |
 | chat:send | `{clientMessageId:UUIDv4,text}`; ack Mensaje persistido |
 | media:update | `{micOn:boolean,camOn:boolean,screenSharing:boolean}` |
 | rtc:signal | `{toConnectionId,signal}`; SDP/ICE al destinatario presente en la misma sala |
@@ -82,3 +83,5 @@ WebRTC usa simple-peer 9.11.1 (bundle de navegador, sin polyfills Node globales)
 STUN `stun:stun.l.google.com:19302`. TURN opcional `free.expressturn.com:3478` UDP/TCP, variables TURN_USERNAME/TURN_PASSWORD externas. Vacíos o xxxxxxxx deshabilitan TURN: no son credenciales válidas. La configuración ICE se entrega a clientes autenticados y esas credenciales son visibles en el navegador; usar cuenta TURN dedicada, cuotas/rotación y valorar credenciales temporales antes de una publicación amplia. No equivalen a secretos Firebase. Pruebas en redes distintas, dispositivos físicos y relay real quedan pendientes hasta disponer de valores reales.
 
 La captura de vídeo solicita 640×360 a 15 fps (máximo solicitado 24), para moderar consumo en la malla; el navegador negocia según dispositivo. Cada handshake solicita un ID token actualizado. Compose local desactiva proofSession para conectar clientes de producto.
+
+La corrección posterior de historial y micrófono se detalla en [chat/audio](chat-audio.md). Los eventos de producto incluyen también chat:history; el cliente lo utiliza como alternativa si REST está mal enrutado (404/405).

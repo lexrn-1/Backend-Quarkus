@@ -1,6 +1,7 @@
 services:
   backend-api:
-    image: ${API_IMAGE:?Definir imagen API con etiqueta inmutable}
+    image: ${API_IMAGE:?Definir imagen API con etiqueta latest o SHA}
+    pull_policy: always
     restart: unless-stopped
     environment: &production-env
       QUARKUS_PROFILE: prod
@@ -22,7 +23,8 @@ services:
     networks: [proxy]
 
   backend-realtime:
-    image: ${REALTIME_IMAGE:?Definir imagen realtime con etiqueta inmutable}
+    image: ${REALTIME_IMAGE:?Definir imagen realtime con etiqueta latest o SHA}
+    pull_policy: always
     restart: unless-stopped
     environment:
       <<: *production-env
