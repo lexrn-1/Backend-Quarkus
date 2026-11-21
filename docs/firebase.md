@@ -14,7 +14,7 @@ Sin credenciales, readiness queda DOWN y demo devuelve 503. Para autenticación 
 
 La configuración rechaza emuladores fuera de local/test. No trasladar las variables locales a Dokploy. Firestore Admin omite las reglas de cliente: la autorización futura debe implementarse en los servicios. Aplicar IAM de mínimo privilegio viable por servicio; las restricciones IAM no equivalen a las reglas por documento.
 
-`firestore.rules` niega toda lectura/escritura directa del cliente. Su publicación en Firebase real queda pendiente y requiere verificar el proyecto de destino. El archivo de índices está vacío porque la lectura demo no necesita índices compuestos.
+`firestore.rules` niega toda lectura/escritura directa del cliente. Su publicación en Firebase real queda pendiente y requiere verificar el proyecto de destino. El archivo firestore.indexes.json define los índices compuestos de salas y membresías. Deben publicarse en el proyecto real; subir una imagen a GHCR no los crea. La lectura del documento demo del health no necesita esos índices.
 
 ## Modelo implementado y previsto
 
@@ -28,7 +28,7 @@ La configuración rechaza emuladores fuera de local/test. No trasladar las varia
 | rooms/{roomId}/messages/{messageId} | Realtime escribe; API podrá borrar por privacidad |
 | deletionJobs/{uid} | API: limpieza recuperable |
 
-Consultas previstas: salas por ownerUid/createdAt y mensajes por createdAt/messageId. Añadir y probar índices al implementar esas consultas; no declarar índices desplegados ahora. Las subcolecciones no se borran automáticamente al eliminar una sala. La normalización de usernames está definida en la guía de identidad. La política de borrado y los límites de salas se cerrarán antes de sus historias.
+Consultas implementadas: salas por ownerUid/status/createdAt e ID, membresías por uid/joinedAt y ruta, mensajes por createdAt e ID. El archivo versionado contiene los índices compuestos necesarios; verificar su estado en Firebase antes de dar por publicado el listado. Las subcolecciones no se borran automáticamente al eliminar una sala. La normalización de usernames está definida en la guía de identidad. La política de borrado y los límites de salas se cerrarán antes de sus historias.
 
 ## Conexión local al proyecto real
 
@@ -48,3 +48,22 @@ Para probar el flujo demo, crear posteriormente `demo/sprint0` con un campo stri
 ## Salas y chat
 
 Se añaden rooms, subcolecciones members/messages y roomDeletionJobs. Propiedad, transacciones, índices y ciclo de borrado: [salas/chat](salas-chat.md). Aplicar los índices del archivo versionado al proyecto real antes de publicar; el emulador no verifica su disponibilidad productiva. Las reglas actuales deniegan todo acceso Firestore directo del navegador; Angular consume REST/Socket.IO autenticados. No cambiar esas reglas para habilitar chat.
+
+## 503 al listar salas: índices de producción
+
+El 21-11-2026 se consultó la configuración del proyecto appmeet-dev: no había índices compuestos. Se reprodujo la consulta de salas propias con un identificador diagnóstico sin datos de usuario; Firestore respondió `FAILED_PRECONDITION: The query requires an index`. Los dos índices requeridos están en firestore.indexes.json. El health solo lee un documento y puede estar UP aunque estas consultas fallen. El repositorio registra ahora la causa original en Logs con la etiqueta `Firestore operation=rooms.list.owned failed` o `rooms.list.member`; la respuesta HTTP mantiene su mensaje seguro.
+
+Se intentó publicar exclusivamente índices. La cuenta de servicio disponible no tiene permiso de creación: Firestore respondió 403 en rooms y members. La CLI también encontró falta de permiso serviceusage.services.get durante la comprobación previa de la API. No se crearon índices ni se cambiaron documentos/reglas.
+
+Desde la raíz de backend, con las dependencias de tests/integration instaladas, ejecutar con una cuenta de usuario administradora del proyecto:
+
+```bash
+./tests/integration/node_modules/.bin/firebase login
+./tests/integration/node_modules/.bin/firebase deploy --only firestore:indexes --project appmeet-dev
+```
+
+Si el CLI se ejecuta con otra cuenta, seleccionar la cuenta autorizada antes de desplegar. Para crear índices se requiere permiso `datastore.indexes.create` (por ejemplo roles/datastore.indexAdmin); la comprobación previa de la CLI necesita también consultar los servicios del proyecto. Usar una cuenta administrativa de despliegue, sin ampliar innecesariamente los permisos de la cuenta de ejecución del backend.
+
+Esperar a que los índices de rooms y members estén habilitados/READY en Firestore → Índices. La siguiente petición autenticada puede usarlos sin reconstruir imágenes ni reiniciar el backend. Una lista sin salas debe devolver 200 con items vacío, no 503. Comprobar tanto scope=owned como scope=member. Si persiste el error, consultar el log: FAILED_PRECONDITION apunta a índice ausente/no listo; PERMISSION_DENIED a IAM; UNAVAILABLE/DEADLINE_EXCEEDED a conectividad/latencia.
+
+Referencia: [gestión de índices](https://firebase.google.com/docs/firestore/query-data/indexing).

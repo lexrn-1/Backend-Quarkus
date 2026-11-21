@@ -16,6 +16,8 @@ public class CollaborationSocket {
   private SocketIOServer server;
   private ScheduledExecutorService checks;
   private final Map<String, long[]> buckets = new ConcurrentHashMap<>();
+  private final Map<String, RecentSessionCheck> sessions = new ConcurrentHashMap<>();
+  private static final org.jboss.logging.Logger LOG = org.jboss.logging.Logger.getLogger(CollaborationSocket.class);
 
   public void bind(SocketIOServer server) {
     this.server = server;
@@ -27,6 +29,7 @@ public class CollaborationSocket {
         client -> {
           collaboration.leave(client.getSessionId().toString());
           buckets.remove(client.getSessionId().toString());
+          sessions.remove(client.getSessionId().toString());
         });
     checks =
         Executors.newSingleThreadScheduledExecutor(
@@ -45,6 +48,7 @@ public class CollaborationSocket {
               if (!tokens.active(identity)) throw new SecurityException();
               collaboration.validate(client.getSessionId().toString(), identity.uid());
             } catch (Exception e) {
+              sessions.remove(client.getSessionId().toString());
               client.sendEvent("session:expired", Map.of("code", "UNAUTHORIZED"));
               collaboration.leave(client.getSessionId().toString());
               client.disconnect();
@@ -60,11 +64,13 @@ public class CollaborationSocket {
   private void handle(String event, SocketIOClient client, Map data, AckRequest ack) {
     try {
       TokenVerifier.Identity identity = client.get("identity");
-      if (identity == null || !tokens.active(identity)) {
+      String connection = client.getSessionId().toString();
+      boolean burst = event.equals("rtc:signal") || event.equals("media:update");
+      if (!sessions.computeIfAbsent(connection, key -> new RecentSessionCheck())
+          .active(identity, System.currentTimeMillis(), burst, () -> tokens.active(identity))) {
         client.disconnect();
         throw new CollaborationProblem("UNAUTHORIZED", "Sesión inválida");
       }
-      String connection = client.getSessionId().toString();
       boolean[] accepted = {true};
       long second = System.currentTimeMillis() / 1000;
       buckets.compute(
@@ -150,6 +156,7 @@ public class CollaborationSocket {
               "error",
               Map.of("code", "INVALID_EVENT", "message", "Campos de evento inválidos")));
     } catch (Exception e) {
+      LOG.errorf(e, "Socket operation=%s failed", event);
       ack.sendAckData(
           Map.of(
               "ok",
@@ -172,5 +179,6 @@ public class CollaborationSocket {
     if (checks != null) checks.shutdownNow();
     collaboration.close();
     buckets.clear();
+    sessions.clear();
   }
 }

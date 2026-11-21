@@ -10,6 +10,7 @@
 | [Firebase](firebase.md) | Credenciales, emuladores, modelo y reglas |
 | [Contratos](contratos.md) | REST/eventos actuales y futuros |
 | [Pruebas](pruebas.md) | QA local y pendientes de integración pública |
+| [Latencia y recuperación de medios](latencia-media.md) | Historial por socket, lecturas batch, recuperación WebRTC y diagnóstico de TURN |
 | [Dokploy](dokploy.md) | Imágenes, secretos, proxy y rollback |
 | [Desarrollo](desarrollo.md) | Extensión de las capas |
 | [Integración cliente](integracion-cliente.md) | URLs, CORS y contratos para Angular |

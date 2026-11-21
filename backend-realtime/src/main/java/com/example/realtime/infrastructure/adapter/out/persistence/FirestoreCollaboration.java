@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 @ApplicationScoped
 public class FirestoreCollaboration implements CollaborationRepository {
+  private static final org.jboss.logging.Logger LOG = org.jboss.logging.Logger.getLogger(FirestoreCollaboration.class);
   @Inject FirebaseProvider firebase;
 
   private DocumentReference room(String id) {
@@ -25,13 +26,16 @@ public class FirestoreCollaboration implements CollaborationRepository {
   }
 
   public Access access(String uid, String id) {
-    var room = await(room(id).get());
+    var documents = await(firebase.firestore().getAll(
+        room(id), room(id).collection("members").document(uid),
+        firebase.firestore().collection("users").document(uid)));
+    var room = documents.get(0);
     if (!room.exists()) throw problem("ROOM_NOT_FOUND", "Sala no encontrada");
     if (!"ACTIVE".equals(room.getString("status")))
       throw problem("ROOM_CLOSED", "La sala está cerrada");
-    if (!await(room.getReference().collection("members").document(uid).get()).exists())
+    if (!documents.get(1).exists())
       throw problem("FORBIDDEN", "No perteneces a esta sala");
-    var profile = await(firebase.firestore().collection("users").document(uid).get());
+    var profile = documents.get(2);
     if (!profile.exists() || !"COMPLETE".equals(profile.getString("status")))
       throw problem("FORBIDDEN", "Perfil no disponible");
     return new Access(id, room.getString("name"), room.getString("ownerUid"), sender(uid, profile));
@@ -54,10 +58,13 @@ public class FirestoreCollaboration implements CollaborationRepository {
             .firestore()
             .runTransaction(
                 tx -> {
-                  var room = tx.get(room(id)).get();
-                  var member = tx.get(room(id).collection("members").document(uid)).get();
-                  var user = tx.get(firebase.firestore().collection("users").document(uid)).get();
-                  var old = tx.get(ref).get();
+                  var documents = tx.getAll(
+                      room(id), room(id).collection("members").document(uid),
+                      firebase.firestore().collection("users").document(uid), ref).get();
+                  var room = documents.get(0);
+                  var member = documents.get(1);
+                  var user = documents.get(2);
+                  var old = documents.get(3);
                   if (!room.exists()) throw problem("ROOM_NOT_FOUND", "Sala no encontrada");
                   if (!"ACTIVE".equals(room.getString("status")))
                     throw problem("ROOM_CLOSED", "Sala cerrada");
@@ -198,6 +205,7 @@ public class FirestoreCollaboration implements CollaborationRepository {
       if (e instanceof InterruptedException) Thread.currentThread().interrupt();
       for (Throwable c = e; c != null; c = c.getCause())
         if (c instanceof CollaborationProblem p) throw p;
+      LOG.error("Firestore collaboration operation failed", e);
       throw problem("DEPENDENCY_UNAVAILABLE", "No pudimos acceder a los datos");
     } finally {
       if (!f.isDone()) f.cancel(true);

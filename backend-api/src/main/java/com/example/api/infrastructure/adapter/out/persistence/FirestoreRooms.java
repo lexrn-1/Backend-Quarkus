@@ -14,9 +14,11 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class FirestoreRooms implements RoomRepository {
+  private static final Logger LOG = Logger.getLogger(FirestoreRooms.class);
   @Inject FirebaseProvider firebase;
 
   private CollectionReference collection() {
@@ -139,7 +141,9 @@ public class FirestoreRooms implements RoomRepository {
         throw new RoomProblem(RoomProblem.Code.INVALID_CURSOR, "Cursor inválido");
       }
     }
-    var docs = await(query.limit(limit + 1).get()).getDocuments();
+    var docs =
+        await("rooms.list." + (memberScope ? "member" : "owned"), query.limit(limit + 1).get())
+            .getDocuments();
     var items = new ArrayList<Room>();
     for (var doc : docs.subList(0, Math.min(limit, docs.size()))) {
       if (memberScope) {
@@ -207,12 +211,19 @@ public class FirestoreRooms implements RoomRepository {
   }
 
   private <T> T await(ApiFuture<T> f) {
+    return await("rooms", f);
+  }
+
+  private <T> T await(String operation, ApiFuture<T> f) {
     try {
       return f.get(15, TimeUnit.SECONDS);
     } catch (Exception e) {
       if (e instanceof InterruptedException) Thread.currentThread().interrupt();
       for (Throwable c = e; c != null; c = c.getCause()) if (c instanceof RoomProblem p) throw p;
-      throw new DependencyUnavailableException();
+      // Keep Firebase's index/IAM/timeout cause in server logs, never in the HTTP response.
+      // Labels contain no user id, token, cursor or room document data.
+      LOG.errorf(e, "Firestore operation=%s failed", operation);
+      throw new DependencyUnavailableException(e);
     } finally {
       if (!f.isDone()) f.cancel(true);
     }
